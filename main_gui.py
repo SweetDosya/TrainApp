@@ -1,16 +1,21 @@
-from kivy.uix.boxlayout import BoxLayout
+from kivy.clock import Clock
+from kivy.utils import get_color_from_hex
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition, FadeTransition, NoTransition
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.properties import ObjectProperty, StringProperty
 from kivy.lang import Builder
 from kivy.core.window import Window
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDRoundFlatIconButton, MDRaisedButton
 from kivymd.uix.dialog import MDDialog
+from kivymd.uix.expansionpanel import MDExpansionPanel, MDExpansionPanelOneLine
+from kivymd.uix.list import OneLineListItem, MDList, TwoLineIconListItem, IconRightWidget, TwoLineRightIconListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.textfield import MDTextField
 from user_db import UserDB, CONFIG_FILE_USER
 from info_more import IMT_INFO, BRM_INFO
+from datetime import datetime, timedelta
+import locale
 import re
 import os
 import json
@@ -18,14 +23,171 @@ import json
 Builder.load_file("main.kv")
 Window.size = (500, 600)
 CONFIG_FILE = "theme_config.json"
+locale.setlocale(locale.LC_TIME, "uk_UA")
 
 
 class ScreenNewUser(Screen):
     pass
 
 
+class NavigationScreenManager(ScreenManager):
+    screen_stack = []
+
+    def push(self, screen_name):
+        if screen_name not in self.screen_stack:
+            self.screen_stack.append(self.current)
+            self.current = screen_name
+
+    def pop(self):
+        if len(self.screen_stack) > 0:
+            screen_name = self.screen_stack[-1]
+            del self.screen_stack[-1]
+            self.current = screen_name
+
+
+class NavigationExerciseManager(NavigationScreenManager):
+    date_obj = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.transition = FadeTransition(duration=0.1)
+
+    def start_workout(self):
+        day_of_week = str(self.date_obj.weekday())
+        user_db = MDApp.get_running_app().user_db
+        workout_calendar = user_db.get_workout_calendar(day_of_week)
+        if workout_calendar.exists:
+            program_refs = workout_calendar.to_dict().get('programs', [])
+            if program_refs:
+                self.show_workout_programs(program_refs)
+                return
+        self.show_no_programs()
+
+    def show_workout_programs(self, program_refs):
+        self.current = 'workout_programs'
+        programs_screen = self.get_screen('workout_programs')
+        programs_screen.ids.programs_list.clear_widgets()
+
+        for ref in program_refs:
+            program_data = ref.get().to_dict()
+            programs_screen.ids.programs_list.add_widget(
+                OneLineListItem(text=program_data['name'])
+            )
+
+    def show_no_programs(self):
+        self.current = 'program_not_found'
+
+    def create_program(self):
+        self.current = 'create_program'
+
+
 class MainExerciseScreen(Screen):
-    pass
+    current_date = StringProperty("")
+
+    def on_pre_enter(self, *args):
+        self.manager.date_obj = datetime.now()
+        self.update_date()
+
+    def update_date(self):
+        self.current_date = self.manager.date_obj.strftime("%a, %d %b")
+
+    def next_day(self):
+        self.manager.date_obj += timedelta(days=1)
+        self.update_date()
+
+    def prev_day(self):
+        self.manager.date_obj -= timedelta(days=1)
+        self.update_date()
+
+
+
+class CreateProgramScreen(Screen):
+    group_muscles_images = (
+        'd_abs.png', 'd_arms.png',
+        'd_back.png', 'd_chest.png',
+        'd_legs.png', 'd_shoulders.png'
+    )
+
+    def on_pre_enter(self):
+        Clock.schedule_once(self.load_muscle_groups, 0.1)
+
+    def load_muscle_groups(self, *args):
+        self.ids.muscle_groups_list.clear_widgets()
+        db = MDApp.get_running_app().user_db.db
+        muscle_groups = db.collection('exercises').stream()
+        for img_num, group in enumerate(muscle_groups):
+            group_data = group.to_dict()
+            exercises_list = self.load_exercises_for_group(group.id)
+            group_item = MDExpansionPanel(
+                icon=f'source/images/{self.group_muscles_images[img_num]}',
+                content=exercises_list,
+                panel_cls=MDExpansionPanelOneLine(text=group_data['name'])
+            )
+            self.ids.muscle_groups_list.add_widget(group_item)
+
+    def load_exercises_for_group(self, group_id):
+        exercises_list = MDList()
+        db = MDApp.get_running_app().user_db.db
+        exercises = db.collection('exercises').document(group_id).collection('exercises').stream()
+        for exercise in exercises:
+            exercise_data = exercise.to_dict()
+            exercise_item = TwoLineRightIconListItem(
+                text=exercise_data['name'],
+                secondary_text=f"Рівень складності - {exercise_data['difficulty']}"
+            )
+            exercise_item.selected = False  # Додаємо прапор вибору
+            exercise_item.bind(on_release=lambda item=exercise_item: self.toggle_selection(item))
+            icon = IconRightWidget(icon="information-outline")
+            icon.on_release = lambda x=exercise_data: self.show_exercise_description(x)
+            exercise_item.add_widget(icon)
+            exercises_list.add_widget(exercise_item)
+        return exercises_list
+
+    def toggle_selection(self, exercise_item):
+        app = MDApp.get_running_app()
+        if exercise_item.selected:
+            exercise_item.bg_color = app.theme_cls.bg_normal
+        else:
+            primary_color = app.theme_cls.primary_color
+            exercise_item.bg_color = (primary_color[0], primary_color[1], primary_color[2], 0.1)
+        exercise_item.selected = not exercise_item.selected
+
+    def show_exercise_description(self, exercise_data):
+        # Логіка для показу опису вправи
+        pass
+
+    def save_program(self):
+        program_name = self.ids.program_name.text
+        if not program_name:
+            return  # Handle the error, maybe show a message to the user
+        user_db = MDApp.get_running_app().user_db.db
+
+        # Створюємо програму тренувань
+        program_data = {
+            'name': program_name,
+            'exercises': []
+        }
+        for item in self.ids.muscle_groups_list.children:
+            if isinstance(item, OneLineListItem):
+                checkbox = item.ids.checkbox
+                if checkbox.active:
+                    program_data['exercises'].append(item.text)
+
+        # Зберігаємо програму в колекцію програм тренувань
+        program_ref = user_db.create_workout_program(program_data)
+
+        # Оновлюємо календар тренувань
+        day_of_week = str(self.manager.date_obj.weekday())
+        workout_calendar = user_db.get_workout_calendar(day_of_week)
+        if workout_calendar.exists:
+            program_refs = workout_calendar.to_dict().get('programs', [])
+        else:
+            program_refs = []
+        program_refs.append(program_ref)
+        user_db.update_workout_calendar(day_of_week, program_refs)
+
+        # Перемикаємося назад на головний екран тренувань
+        self.manager.current = 'main_exercise'
 
 
 class InfoScreen(Screen):
@@ -35,7 +197,7 @@ class InfoScreen(Screen):
         user_id = user_config.get('user_id')
         if user_id:
             app = MDApp.get_running_app()
-            user_data = app.user_db.get_user_data(user_id)
+            user_data = app.user_db.get_user_data()
             if user_data:
                 self.calculate_imt(user_data)
                 self.calculate_brm(user_data)
@@ -86,7 +248,7 @@ class InfoScreen(Screen):
 
     def show_imt_info(self):
         self.dialog = MDDialog(
-            title="БРМ",
+            title="ІМТ",
             text=IMT_INFO,
             buttons=[
                 MDRaisedButton(
@@ -114,19 +276,6 @@ class InfoScreen(Screen):
         self.dialog.dismiss()
 
 
-class IMTBarWidget(BoxLayout):
-    imt_value = NumericProperty(26.1)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.bind(imt_value=self.update_thumb_position, size=self.update_thumb_position)
-
-    def update_thumb_position(self, *args):
-        bar_width = self.ids.imt_bar.width
-        thumb_x = bar_width * (self.imt_value - 16) / (40 - 16)
-        self.ids.thumb_label.center_x = self.x + thumb_x
-
-
 class MainAppPage(Screen):
     bar_name = StringProperty("Головна")
 
@@ -137,7 +286,7 @@ class MainAppPage(Screen):
 
     def change_main_screen_app_bar(self, screen):
         top_bar = self.ids.top_bar
-        if screen == "main":
+        if screen == "main_exercise":
             top_bar.left_action_items = []
         else:
             top_bar.left_action_items = [["arrow-left", lambda x: self.to_main_screen()]]
@@ -145,14 +294,14 @@ class MainAppPage(Screen):
     def to_main_screen(self):
         self.ids.bottom_nav.switch_tab('main_tab')
         self.bar_name = "Головна"
-        self.change_main_screen_app_bar("main")
-        self.ids.main_nav_bar_manager.current = "main"
+        self.change_main_screen_app_bar("main_exercise")
+        self.ids.main_nav_bar_manager.current = "main_exercise"
 
 
 class MainAppNavigationBarManager(ScreenManager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.transition = NoTransition()
+        self.transition = FadeTransition(duration=0.1)
 
 
 class ProfileScreen(Screen):
@@ -169,7 +318,7 @@ class ProfileScreen(Screen):
         user_id = user_config.get('user_id')
         if user_id:
             app = MDApp.get_running_app()
-            user_data = app.user_db.get_user_data(user_id)
+            user_data = app.user_db.get_user_data()
             if user_data:
                 self.name_field = user_data.get('name', '')
                 self.sec_name_field = user_data.get('sec_name', '')
@@ -290,21 +439,8 @@ class NewUserScreenManager(ScreenManager):
         self.transition = SlideTransition(direction="left")
 
 
-class NavigationScreenManager(ScreenManager):
-    screen_stack = []
-
-    def push(self, screen_name):
-        if screen_name not in self.screen_stack:
-            self.screen_stack.append(self.current)
-            self.transition.direction = "left"
-            self.current = screen_name
-
-    def pop(self):
-        if len(self.screen_stack) > 0:
-            screen_name = self.screen_stack[-1]
-            del self.screen_stack[-1]
-            self.transition.direction = "right"
-            self.current = screen_name
+class MainAppScreenManager(ScreenManager):
+    pass
 
 
 class TrainApp(MDApp):
@@ -316,7 +452,7 @@ class TrainApp(MDApp):
 
     def build(self) -> ObjectProperty:
         self.load_theme()
-        self.manager = NavigationScreenManager()
+        self.manager = MainAppScreenManager()
         user_doc = self.user_db.get_exist_user()
         if user_doc:
             self.manager.current = "main_app_menu"

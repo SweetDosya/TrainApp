@@ -1,4 +1,4 @@
-<NavigationScreenManager>:
+<MainAppScreenManager>:
     ScreenNewUser:
     MainAppPage:
         name: "main_app_menu"
@@ -19,7 +19,8 @@
             id: main_nav_bar_manager
             size_hint_y: 5.2
 
-            MainExerciseScreen:
+            ExercisesScreen:
+                id: main_exerc
                 name: "main_exercise"
 
             ProfileScreen:
@@ -37,7 +38,7 @@
                 name: "main_tab"
                 text: "Головна"
                 icon: 'home-variant'
-                on_tab_press: main_menu.change_tab_screen(self, "main")
+                on_tab_press: main_menu.change_tab_screen(self, "main_exercise")
             MDBottomNavigationItem:
                 name: "profile_tab"
                 text: "Профіль"
@@ -49,24 +50,63 @@
                 icon: 'notebook'
                 on_tab_press: main_menu.change_tab_screen(self, "info")
 
+<ExercisesScreen@Screen>:
+    id: main_exercs
+    name: "main_exercises"
+
+    NavigationExerciseManager:
+        id: exerc_manager
+        name: "exercise_manager"
+
+        CreateProgramScreen:
+
+        ProgramsNotFoundScreen:
+
+        MainExerciseScreen:
+            id: main_exerc
+            name: "main_exercise"
+
+        WorkoutProgramsScreen:
+
+
+
 <MainExerciseScreen>:
     id: main_exerc
+    name: "main_exercise"
     AnchorLayout:
         BoxLayout:
+            orientation: "vertical"
             size_hint: None, None
-            height: "160dp"
+            height: "230dp"
             width: "305dp"
-            spacing: "-35dp"
-            MDIconButton:
-                icon: "chevron-left"
-                icon_size: "120sp"
-            MDIcon:
-                icon: "weight-lifter"
-                pos_hint: {"center_x": 0.5, "center_y":0.5}
-                font_size: "90sp"
-            MDIconButton:
-                icon: "chevron-right"
-                icon_size: "120sp"
+            MDLabel:
+                id: date_label
+                text: root.current_date
+                halign: "center"
+                theme_text_color: "Primary"
+                font_style: "H5"
+            BoxLayout:
+                size_hint: None, None
+                height: "90dp"
+                width: "305dp"
+                spacing: "-35dp"
+                MDIconButton:
+                    icon: "chevron-left"
+                    icon_size: "120sp"
+                    on_release: root.manager.prev_day()
+                MDIcon:
+                    icon: "weight-lifter"
+                    pos_hint: {"center_x": 0.5, "center_y":0.85}
+                    font_size: "90sp"
+                MDIconButton:
+                    icon: "chevron-right"
+                    icon_size: "120sp"
+                    on_release: root.manager.next_day()
+            MDRaisedButton:
+                text: "Почати тренування"
+                pos_hint: {"center_x": 0.51}
+                on_release: root.manager.start_workout()
+
     AnchorLayout:
         anchor_x: "right"
         anchor_y: "top"
@@ -74,6 +114,57 @@
             icon: "calendar-check"
             style: "outlined"
             icon_size: "48sp"
+
+<WorkoutProgramsScreen@Screen>:
+    name: 'workout_programs'
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            MDList:
+                id: programs_list
+        MDRaisedButton:
+            text: "Створити програму тренувань"
+            pos_hint: {"center_x": 0.5}
+            on_release: app.create_new_program()
+
+<ProgramsNotFoundScreen@Screen>:
+    name: 'program_not_found'
+    AnchorLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            size: dp(450), dp(100)
+            spacing: dp(10)
+            MDLabel:
+                text: "Немає програм тренувань для цього дня."
+                halign: 'center'
+                font_style: "H6"
+            MDRaisedButton:
+                text: "Створити програму тренувань"
+                pos_hint: {'center_x': 0.5}
+                on_release: root.manager.create_program()
+
+<CreateProgramScreen>:
+    name: "create_program"
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '10dp'
+        spacing: '10dp'
+        MDTextFieldLetters:
+            id: program_name
+            input_filter: self.insert_filter
+            required: True
+            helper_text: "Введіть назву"
+            max_text_length: 30
+            hint_text: "Назва програми"
+            mode: "rectangle"
+        ScrollView:
+            MDList:
+                id: muscle_groups_list
+        MDRaisedButton:
+            text: "Зберегти програму"
+            pos_hint: {'center_x': 0.5}
+            on_release: root.save_program()
 
 <InfoScreen>:
     id: info
