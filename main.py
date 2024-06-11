@@ -1,4 +1,4 @@
-from main_gui import TrainApp
+from libs.main_gui import TrainApp
 
 
 def main() -> None:

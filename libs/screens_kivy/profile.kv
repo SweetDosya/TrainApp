@@ -1,0 +1,69 @@
+<ProfileScreen>:
+    id: profile
+    name: "profile"
+    BoxLayout:
+        padding: "15dp"
+        spacing: "20dp"
+        orientation: "vertical"
+        MDIcon:
+            icon: "human-male" if profile.sex_field == "Чоловік" else "human-female"
+            style: "filled"
+            font_size: "90sp"
+            pos_hint: {"center_x": 0.5}
+        GridLayout:
+            cols: 2
+            padding: "10dp"
+            spacing: "30dp"
+            size_hint_y: None
+            height: self.minimum_height
+            MDTextFieldOnlyLetters:
+                mode: "rectangle"
+                id: name
+                hint_text: "Ім'я"
+                #helper_text: "Введіть ім'я"
+                input_filter: self.insert_filter
+                max_text_length: 15
+                text: profile.name_field
+            MDTextFieldOnlyLetters:
+                mode: "rectangle"
+                id: sec_name
+                hint_text: "Прізвище"
+                input_filter: self.insert_filter
+                #helper_text: "Введіть прізвище"
+                max_text_length: 20
+                text: profile.sec_name_field
+            MDTextField:
+                mode: "rectangle"
+                #helper_text: "Введіть зріст в см"
+                id: height
+                readonly: True
+                hint_text: "Зріст"
+                # if self.focus: root.open_menu(height, (140, 210))
+                text: profile.height_field
+            MDTextField:
+                mode: "rectangle"
+                #helper_text: "Введіть вагу в кг"
+                id: weight
+                readonly: True
+                hint_text: "Вага"
+                # if self.focus: root.open_menu(weight, (30, 250))
+                text: profile.weight_field
+            MDTextField:
+                mode: "rectangle"
+                id: age
+                #helper_text: "Введіть вік"
+                hint_text: "Вік"
+                # if self.focus: root.open_menu(age, (12, 124))
+                text: profile.age_field
+            MDTextField:
+                mode: "rectangle"
+                id: sex
+                readonly: True
+                #helper_text: "Оберіть стать"
+                hint_text: "Стать"
+                text: profile.sex_field
+        MDRaisedButton:
+            text: "Зберегти"
+            pos_hint: {"center_x": 0.5, "top": 1.5}
+            # on_release: app.save_profile()
+    

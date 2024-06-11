@@ -1,0 +1,45 @@
+<MainAppPage>:
+    id: main_menu
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDTopAppBar:
+            id: top_bar
+            title: main_menu.bar_name
+            anchor_title: "left"
+            right_action_items: [["theme-light-dark", lambda x: app.switch_theme()]]
+
+        MainAppNavigationBarManager:
+            id: main_nav_bar_manager
+            size_hint_y: 5.2
+
+            ExercisesScreen:
+                id: main_exercs
+                name: "main_exercise"
+
+            ProfileScreen:
+                name: "profile"
+
+            InfoScreen:
+                name: "info"
+
+        MDBottomNavigation:
+            id: bottom_nav
+            selected_color_background: app.theme_cls.bg_normal
+            elevation: 5
+            height: self.minimum_height
+            MDBottomNavigationItem:
+                name: "main_tab"
+                text: "Головна"
+                icon: 'home-variant'
+                on_tab_press: main_menu.change_tab_screen(self, "main_exercise")
+            MDBottomNavigationItem:
+                name: "profile_tab"
+                text: "Профіль"
+                icon: 'account'
+                on_tab_press: main_menu.change_tab_screen(self, "profile")
+            MDBottomNavigationItem:
+                name: "note_tab"
+                text: "Інформація"
+                icon: 'notebook'
+                on_tab_press: main_menu.change_tab_screen(self, "info")

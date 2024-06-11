@@ -1,17 +1,8 @@
-from db import db
+from db.init import db
 import os
 import json
 
-CONFIG_FILE_USER = "user_id.json"
-
-USER_DEFAULT_DATA = {
-    'name': "Daniel",
-    'sec_name': "Yeromenko",
-    'sex': "male",
-    'age': 23,
-    'height': 166,
-    'weight': 72
-}
+CONFIG_FILE_USER = "configs/user_id.json"
 
 
 class UserDB:
@@ -38,10 +29,10 @@ class UserDB:
                 return doc_ref
         return False
 
-    @staticmethod
-    def _create_user(data):
+    def _create_user(self, data):
         doc_ref = db.collection("users").document()
         doc_ref.set(data)
+        self.user_id = doc_ref.id
         print(doc_ref.id)
         # Save the new user ID to the file
         with open(CONFIG_FILE_USER, 'w') as file:
@@ -60,9 +51,6 @@ class UserDB:
 
     def create_custom_user(self, data):
         self._create_user(data)
-
-    def create_default_user(self):
-        self._create_user(USER_DEFAULT_DATA)
 
     def get_workout_calendar(self, day):
         user_ref = self.get_exist_user()

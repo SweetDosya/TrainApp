@@ -1,0 +1,122 @@
+<ScreenNewUser>:
+    md_bg_color: app.theme_cls.primary_color
+    MDCard:
+        size_hint: 0.8, 0.6
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        elevation: 5
+        MDBoxLayout:
+            orientation: "vertical"
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            padding: dp(15)
+            MDLabel:
+                id: welcome_label
+                text: "Вітаємо в TrainApp!"
+                halign: 'center'
+                theme_text_color: 'Primary'
+                font_style: 'H5'
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            NewUserScreenManager:
+                id: new_user_manager
+
+<NewUserScreenManager>:
+    GeneralUserData:
+        id: general_user_data_new
+        name: "general_data"
+    PhysicalUserData:
+        id: physic_user_data_new
+        name: "physic_data"
+
+<GeneralUserData>:
+    MDBoxLayout:
+        id: box_gen_data
+        orientation: "vertical"
+        padding: dp(5)
+        spacing: dp(15)
+        MDTextFieldOnlyLetters:
+            id: first_name
+            hint_text: "Ім'я"
+            input_filter: self.insert_filter
+            required: True
+            helper_text: "Введіть ім'я"
+            size_hint_x: 0.5
+            pos_hint: {'center_x': 0.5}
+            max_text_length: 15
+
+        MDTextFieldOnlyLetters:
+            id: second_name
+            hint_text: "Прізвище"
+            required: True
+            input_filter: self.insert_filter
+            helper_text: "Введіть прізвище"
+            size_hint_x: 0.5
+            pos_hint: {'center_x': 0.5}
+            max_text_length: 20
+
+        MDBoxLayout:
+            size_hint_x: 0.5
+            spacing: dp(30)
+            pos_hint: {"center_x": 0.4}
+            SexUserToggleButton:
+                group: 'sex'
+                text: "Чоловік"
+                icon: "gender-male"
+                pos_hint: {"center_y": 0.5}
+                on_release: root.update_sex("Чоловік")
+            SexUserToggleButton:
+                group: 'sex'
+                text: "Жінка"
+                icon: 'gender-female'
+                pos_hint: {"center_y": 0.5}
+                on_release: root.update_sex("Жінка")
+
+        MDRaisedButton:
+            text: "Далі"
+            pos_hint: {"center_x": 0.5}
+            on_release: root.update_name(first_name); root.update_sec_name(second_name); root.process_data()
+
+
+<PhysicalUserData>:
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: dp(5)
+        spacing: dp(15)
+        MDTextField:
+            id: user_data_age
+            hint_text: "Вік"
+            required: True
+            helper_text: "Введіть вік"
+            size_hint_x: 0.5
+            pos_hint: {'center_x': 0.5}
+            readonly: True
+            on_focus: if self.focus: root.open_menu(user_data_age, (12, 124))
+
+        MDTextField:
+            id: user_data_height
+            hint_text: "Зріст (см)"
+            required: True
+            helper_text: "Введіть зріст в см"
+            size_hint_x: 0.5
+            readonly: True
+            pos_hint: {'center_x': 0.5}
+            on_focus: if self.focus: root.open_menu(user_data_height, (140, 210))
+
+        MDTextField:
+            id: user_data_weight
+            hint_text: "Вага (кг)"
+            required: True
+            helper_text: "Введіть вагу в кг"
+            size_hint_x: 0.5
+            readonly: True
+            pos_hint: {'center_x': 0.5}
+            on_focus: if self.focus: root.open_menu(user_data_weight, (30, 250))
+
+        MDRaisedButton:
+            text: "Зберегти"
+            pos_hint: {"center_x": 0.5}
+            on_release:
+                root.update_name(user_data_age);
+                root.update_sec_name(user_data_height);
+                root.update_sex(user_data_weight);
+                root.process_data();

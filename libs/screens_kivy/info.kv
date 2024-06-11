@@ -1,0 +1,80 @@
+<InfoScreen>:
+    id: info
+    name: "info"
+    ScrollView:
+        BoxLayout:
+            orientation: 'vertical'
+            padding: '20dp'
+            spacing: '20dp'
+
+            MDCard:
+                ripple_behavior: True
+                style: "outlined"
+                elevation: 10
+                padding: '10dp'
+                on_release: info.show_imt_info()
+
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: '10dp'
+                    spacing: '10dp'
+
+                    BoxLayout:
+                        orientation: 'horizontal'
+
+                        MDLabel:
+                            text: "Індекс маси тіла (ІМТ)"
+                            halign: "center"
+                            font_style: "H5"
+                            size_hint_x: 0.9
+
+                        MDIcon:
+                            icon: "chevron-down"
+                            pos_hint: {"center_y": 0.9, "center_x": 0.75}
+                            size_hint_x: 0.1
+
+                    MDLabel:
+                        id: imt_value
+                        halign: "center"
+                        font_style: "H4"
+                        theme_text_color: "Custom"
+                        text_color: 1, 0, 0, 1
+
+                    MDLabel:
+                        id: imt_category
+                        text: "Надмірна вага"
+                        halign: "center"
+                        font_style: "H6"
+
+            MDCard:
+                ripple_behavior: True
+                style: "outlined"
+                elevation: 10
+                padding: '10dp'
+                on_release: info.show_brm_info()
+
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: '10dp'
+                    spacing: '10dp'
+
+                    BoxLayout:
+                        orientation: 'horizontal'
+
+                        MDLabel:
+                            text: "Базальний рівень метаболізму\n(БРМ)"
+                            halign: "center"
+                            font_style: "H5"
+                            size_hint_x: 0.9
+
+                        MDIcon:
+                            icon: "chevron-down"
+                            pos_hint: {"center_y": 0.9, "center_x": 0.75}
+                            size_hint_x: 0.1
+
+                    MDLabel:
+                        id: brm_value
+                        halign: "center"
+                        font_style: "H4"
+                        theme_text_color: "Custom"
+                        text_color: 0, 1, 0, 1
