@@ -22,8 +22,7 @@ The project was developed as a complete workout management platform that allows 
 - Python
 - Kivy
 - KivyMD
-- Firebase Authentication
-- Firestore Database
+- Firebase
 - Object-Oriented Programming (OOP)
 
 ## 🚀 Installation
