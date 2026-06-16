@@ -1,4 +1,4 @@
-# TrainApp
+# Personal Fitness App
 
 A mobile fitness application built with Python, KivyMD, and Firebase.
 
