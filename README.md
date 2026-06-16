@@ -69,7 +69,7 @@ user_db.create_workout_program(program_data)
 
 This demonstrates the core idea behind the application: creating and managing workout programs that can later be assigned to specific days within the workout calendar.
 
-## Design Goals
+## ✨ Design Goals
 - Mobile-first user experience
 - Easy workout customization
 - Future Improvements
